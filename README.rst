@@ -1,11 +1,3 @@
-.. image:: http://bethgelab.org/media/banners/benchmark_banner_small.png
-    :target: https://robust.vision/benchmark
-
-You might want to have a look at our recently announced `Robust Vision Benchmark <https://robust.vision/benchmark>`__.
-
-------------
-
-
 .. image:: https://readthedocs.org/projects/foolbox/badge/?version=latest
     :target: https://foolbox.readthedocs.io/en/latest/
 
@@ -14,6 +6,9 @@ You might want to have a look at our recently announced `Robust Vision Benchmark
 
 .. image:: https://coveralls.io/repos/github/bethgelab/foolbox/badge.svg
     :target: https://coveralls.io/github/bethgelab/foolbox
+
+.. image:: https://badge.fury.io/py/foolbox.svg
+    :target: https://badge.fury.io/py/foolbox
 
 
 
@@ -140,7 +135,7 @@ in resulting publications:
 .. code-block::
 
   @article{rauber2017foolbox,
-    title={Foolbox v0.8.0: A Python toolbox to benchmark the robustness of machine learning models},
+    title={Foolbox: A Python toolbox to benchmark the robustness of machine learning models},
     author={Rauber, Jonas and Brendel, Wieland and Bethge, Matthias},
     journal={arXiv preprint arXiv:1707.04131},
     year={2017},
@@ -157,3 +152,9 @@ Authors
 * `Jonas Rauber <https://github.com/jonasrauber>`_
 * `Wieland Brendel <https://github.com/wielandbrendel>`_
 
+------------
+
+.. image:: http://bethgelab.org/media/banners/benchmark_banner_small.png
+    :target: https://robust.vision/benchmark
+
+You might want to have a look at our recently announced `Robust Vision Benchmark <https://robust.vision/benchmark>`__.

@@ -15,5 +15,17 @@ Detailed description
 .. autoclass:: MeanAbsoluteDistance
    :members:
 
+.. autoclass:: Linfinity
+   :members:
+
+.. autoclass:: L0
+   :members:
+
 .. autoclass:: MSE
+   :members:
+
+.. autoclass:: MAE
+   :members:
+
+.. autoclass:: Linf
    :members:

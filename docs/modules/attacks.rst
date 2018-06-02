@@ -24,6 +24,8 @@
    FGSM
    LBFGSAttack
    DeepFoolAttack
+   DeepFoolL2Attack
+   DeepFoolLinfinityAttack
    SLSQPAttack
    SaliencyMapAttack
 
@@ -48,9 +50,9 @@
    ContrastReductionAttack
    AdditiveUniformNoiseAttack
    AdditiveGaussianNoiseAttack
-   BlendedUniformNoiseAttack
    SaltAndPepperNoiseAttack
-   ResetAttack
+   BlendedUniformNoiseAttack
+   PointwiseAttack
 
 
 .. rubric:: :doc:`attacks/other`

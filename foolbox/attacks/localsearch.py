@@ -2,15 +2,42 @@ from __future__ import division
 import numpy as np
 
 from .base import Attack
+from .base import call_decorator
 from ..utils import softmax
 
 
 class SinglePixelAttack(Attack):
-    """Perturbs just a single pixel and sets it to the min or max.
+    """Perturbs just a single pixel and sets it to the min or max."""
 
-    """
+    @call_decorator
+    def __call__(self, input_or_adv, label=None, unpack=True,
+                 max_pixels=1000):
 
-    def _apply(self, a, max_pixels=1000):
+        """Perturbs just a single pixel and sets it to the min or max.
+
+        Parameters
+        ----------
+        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
+            The original, correctly classified image. If image is a
+            numpy array, label must be passed as well. If image is
+            an :class:`Adversarial` instance, label must not be passed.
+        label : int
+            The reference label of the original image. Must be passed
+            if image is a numpy array, must not be passed if image is
+            an :class:`Adversarial` instance.
+        unpack : bool
+            If true, returns the adversarial image, otherwise returns
+            the Adversarial object.
+        max_pixels : int
+            Maximum number of pixels to try.
+
+        """
+
+        a = input_or_adv
+        del input_or_adv
+        del label
+        del unpack
+
         channel_axis = a.channel_axis(batch=False)
         image = a.original_image
         axes = [i for i in range(image.ndim) if i != channel_axis]
@@ -52,9 +79,49 @@ class LocalSearchAttack(Attack):
 
     """
 
-    def _apply(self, a, r=1.5, p=10., d=5, t=5, R=150):
+    @call_decorator
+    def __call__(self, input_or_adv, label=None, unpack=True,
+                 r=1.5, p=10., d=5, t=5, R=150):
+
+        """A black-box attack based on the idea of greedy local search.
+
+        Parameters
+        ----------
+        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
+            The original, correctly classified image. If image is a
+            numpy array, label must be passed as well. If image is
+            an :class:`Adversarial` instance, label must not be passed.
+        label : int
+            The reference label of the original image. Must be passed
+            if image is a numpy array, must not be passed if image is
+            an :class:`Adversarial` instance.
+        unpack : bool
+            If true, returns the adversarial image, otherwise returns
+            the Adversarial object.
+        r : float
+            Perturbation parameter that controls the cyclic perturbation;
+            must be in [0, 2]
+        p : float
+            Perturbation parameter that controls the pixel sensitivity
+            estimation
+        d : int
+            The half side length of the neighborhood square
+        t : int
+            The number of pixels perturbed at each round
+        R : int
+            An upper bound on the number of iterations
+
+        """
+
+        a = input_or_adv
+        del input_or_adv
+        del label
+        del unpack
+
         # TODO: incorporate the modifications mentioned in the manuscript
         # under "Implementing Algorithm LocSearchAdv"
+
+        assert 0 <= r <= 2
 
         if a.target_class() is not None:
             # TODO: check if this algorithm can be used as a targeted attack
@@ -77,17 +144,17 @@ class LocalSearchAttack(Attack):
             im = im + (min_ + max_) / 2
             return im
 
-        I = a.original_image
-        I, LB, UB = normalize(I)
+        Im = a.original_image
+        Im, LB, UB = normalize(Im)
 
         cI = a.original_class
 
         channel_axis = a.channel_axis(batch=False)
-        axes = [i for i in range(I.ndim) if i != channel_axis]
+        axes = [i for i in range(Im.ndim) if i != channel_axis]
         assert len(axes) == 2
-        h = I.shape[axes[0]]
-        w = I.shape[axes[1]]
-        channels = I.shape[channel_axis]
+        h = Im.shape[axes[0]]
+        w = Im.shape[axes[1]]
+        channels = Im.shape[channel_axis]
 
         def random_locations():
             n = int(0.1 * h * w)
@@ -100,12 +167,12 @@ class LocalSearchAttack(Attack):
             return pxy
 
         def pert(Ii, p, x, y):
-            I = Ii.copy()
+            Im = Ii.copy()
             location = [x, y]
             location.insert(channel_axis, slice(None))
             location = tuple(location)
-            I[location] = p * np.sign(I[location])
-            return I
+            Im[location] = p * np.sign(Im[location])
+            return Im
 
         def cyclic(r, Ibxy):
             result = r * Ibxy
@@ -116,7 +183,7 @@ class LocalSearchAttack(Attack):
             assert LB <= result <= UB
             return result
 
-        Ii = I
+        Ii = Im
         PxPy = random_locations()
 
         for _ in range(R):
@@ -158,4 +225,5 @@ class LocalSearchAttack(Attack):
                 for x in range(_a - d, _a + d + 1)
                 for y in range(_b - d, _b + d + 1)]
             PxPy = [(x, y) for x, y in PxPy if 0 <= x < w and 0 <= y < h]
+            PxPy = list(set(PxPy))
             PxPy = np.array(PxPy)

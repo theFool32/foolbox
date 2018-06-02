@@ -14,6 +14,7 @@ from concurrent.futures import Executor
 from concurrent.futures import Future
 
 from .base import Attack
+from .base import call_decorator
 from .blended_noise import BlendedUniformNoiseAttack
 from ..criteria import Misclassification
 
@@ -54,9 +55,10 @@ class BoundaryAttack(Attack):
     def __init__(self, model=None, criterion=Misclassification()):
         super(BoundaryAttack, self).__init__(model=model, criterion=criterion)
 
+    @call_decorator
     def __call__(
             self,
-            image,
+            input_or_adv,
             label=None,
             unpack=True,
             iterations=5000,
@@ -79,7 +81,7 @@ class BoundaryAttack(Attack):
 
         Parameters
         ----------
-        image : `numpy.ndarray` or :class:`Adversarial`
+        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
             The original, correctly classified image. If image is a
             numpy array, label must be passed as well. If image is
             an :class:`Adversarial` instance, label must not be passed.
@@ -128,9 +130,6 @@ class BoundaryAttack(Attack):
 
         """
 
-        # overwriting __call__ to make the list of parameters and default
-        # values as well as the documentation easily accessible to the user
-
         # make some of the parameters available to other methods without
         # the need to explicitly pass them
         self.log_every_n_steps = log_every_n_steps
@@ -152,16 +151,14 @@ class BoundaryAttack(Attack):
         else:
             self.generate_candidate = self.generate_candidate_default
 
-        return super(BoundaryAttack, self).__call__(
-            image=image,
-            label=label,
-            unpack=unpack,
+        return self._apply_outer(
+            input_or_adv,
             iterations=iterations,
             tune_batch_size=tune_batch_size,
             threaded_rnd=threaded_rnd,
             threaded_gen=threaded_gen)
 
-    def _apply(
+    def _apply_outer(
             self,
             *args,
             **kwargs):
@@ -288,20 +285,21 @@ class BoundaryAttack(Attack):
             rnd_normal_queue = queue.Queue(queue_size)
 
             try:
-                import randomstate
+                import randomgen
             except ImportError:  # pragma: no cover
                 raise ImportError('To use the BoundaryAttack,'
-                                  ' please install the randomstate'
-                                  ' module (e.g. pip install randomstate)')
+                                  ' please install the randomgen'
+                                  ' module (e.g. pip install randomgen)')
 
             def sample_std_normal(thread_id, shape, dtype):
                 # create a thread-specifc RNG
-                rng = randomstate.RandomState(seed=20 + thread_id)
+                rng = randomgen.RandomGenerator(
+                    randomgen.Xoroshiro128(seed=20 + thread_id))
 
                 t = threading.currentThread()
                 while getattr(t, 'do_run', True):
                     rnd_normal = rng.standard_normal(
-                        size=shape, dtype=dtype, method='zig')
+                        size=shape, dtype=dtype)
                     rnd_normal_queue.put(rnd_normal)
 
             self.printv('Using {} threads to create random numbers'.format(
@@ -564,6 +562,7 @@ class BoundaryAttack(Attack):
             # Handle the new adversarial
             # ===========================================================
 
+            message = ''
             if new_perturbed is not None:
                 if not new_distance < distance:
                     # assert not is_best  # consistency with adversarial object
@@ -582,8 +581,6 @@ class BoundaryAttack(Attack):
                     # update the variables
                     perturbed = new_perturbed
                     distance = new_distance
-            else:
-                message = ''
 
             # ===========================================================
             # Update step sizes
@@ -602,6 +599,11 @@ class BoundaryAttack(Attack):
             message += ' (took {:.5f} seconds)'.format(t_step)
             self.log_step(step, distance, message)
             sys.stdout.flush()
+
+            if self.stats_numerical_problems > 1000:  # pragma: no cover
+                warnings.warn('Too many intenral inconsistencies,'
+                              ' aborting attack.')
+                break
 
         # ===========================================================
         # Stop threads that generate random numbers
@@ -701,12 +703,12 @@ class BoundaryAttack(Attack):
 
         if rng is None:
             try:
-                import randomstate
+                import randomgen
             except ImportError:  # pragma: no cover
                 raise ImportError('To use the BoundaryAttack,'
-                                  ' please install the randomstate'
-                                  ' module (e.g. pip install randomstate)')
-            rng = randomstate
+                                  ' please install the randomgen'
+                                  ' module (e.g. pip install randomgen)')
+            rng = randomgen.RandomGenerator()
 
         # ===========================================================
         # perform initial work
@@ -723,11 +725,11 @@ class BoundaryAttack(Attack):
         # draw a random direction
         # ===========================================================
 
-        # randomstate's rnd is faster and more flexible than numpy's if
+        # randomgen's rnd is faster and more flexible than numpy's if
         # has a dtype argument and supports the much faster Ziggurat method
         if rnd_normal_queue is None:
             perturbation = rng.standard_normal(
-                size=shape, dtype=original.dtype, method='zig')
+                size=shape, dtype=original.dtype)
         else:
             perturbation = rnd_normal_queue.get()
 
@@ -797,12 +799,12 @@ class BoundaryAttack(Attack):
 
         if rng is None:
             try:
-                import randomstate
+                import randomgen
             except ImportError:  # pragma: no cover
                 raise ImportError('To use the BoundaryAttack,'
-                                  ' please install the randomstate'
-                                  ' module (e.g. pip install randomstate)')
-            rng = randomstate
+                                  ' please install the randomgen'
+                                  ' module (e.g. pip install randomgen)')
+            rng = randomgen.RandomGenerator()
 
         # ===========================================================
         # perform initial work
@@ -819,11 +821,11 @@ class BoundaryAttack(Attack):
         # draw a random direction
         # ===========================================================
 
-        # randomstate's rnd is faster and more flexible than numpy's if
+        # randomgen's rnd is faster and more flexible than numpy's if
         # has a dtype argument and supports the much faster Ziggurat method
         if rnd_normal_queue is None:
             perturbation = rng.standard_normal(
-                size=shape, dtype=original.dtype, method='zig')
+                size=shape, dtype=original.dtype)
         else:
             perturbation = rnd_normal_queue.get()
 
@@ -1086,7 +1088,7 @@ class BoundaryAttack(Attack):
             self.steps_to_next_tuning *= 2
         elif change in [-1, 1]:
             pass
-        else:
+        else:  # pragma: no cover
             if self.steps_to_next_tuning > 100:
                 self.steps_to_next_tuning //= 2
 

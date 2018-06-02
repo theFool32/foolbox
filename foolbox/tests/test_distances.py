@@ -39,6 +39,14 @@ def test_mse():
     assert distances.MSE == distances.MeanSquaredDistance
 
 
+def test_mae():
+    assert distances.MAE == distances.MeanAbsoluteDistance
+
+
+def test_linf():
+    assert distances.Linf == distances.Linfinity
+
+
 def test_mean_squared_distance():
     d = distances.MeanSquaredDistance(
         np.array([0, .5]),
@@ -57,17 +65,43 @@ def test_mean_absolute_distance():
     assert (d.gradient == np.array([0.5, 0])).all()
 
 
+def test_linfinity():
+    d = distances.Linfinity(
+        np.array([0, .5]),
+        np.array([.7, .5]),
+        bounds=(0, 1))
+    assert d.value == approx(.7)
+    with pytest.raises(NotImplementedError):
+        d.gradient
+
+
+def test_l0():
+    d = distances.L0(
+        np.array([0, .5]),
+        np.array([.7, .5]),
+        bounds=(0, 1))
+    assert d.value == approx(1.)
+    with pytest.raises(NotImplementedError):
+        d.gradient
+
+
 @pytest.mark.parametrize('Distance', [
     distances.MeanSquaredDistance,
     distances.MeanAbsoluteDistance,
+    distances.Linfinity,
+    distances.L0,
 ])
 def test_str_repr(Distance):
     """Tests that str and repr contain the value
     and that str does not fail when initialized
     with a value rather than calculated."""
-    reference = np.zeros((5, 5))
-    other = np.ones((5, 5))
+    reference = np.zeros((10, 10))
+    other = np.ones((10, 10))
     d = Distance(reference, other, bounds=(0, 1))
     assert isinstance(str(d), str)
-    assert '1' in str(d)
-    assert '1' in repr(d)
+    if 'L0' in str(d):
+        assert '100' in str(d)
+        assert '100' in repr(d)
+    else:
+        assert '1.00e+' in str(d)
+        assert '1.00e+' in repr(d)

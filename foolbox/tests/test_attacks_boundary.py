@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from foolbox.attacks import BoundaryAttack
 from foolbox.attacks import DeepFoolAttack
@@ -37,6 +38,7 @@ def test_attack_parameters(bn_adversarial):
     adv = bn_adversarial
     attack = BoundaryAttack()
     o = adv.original_image
+    np.random.seed(2)
     starting_point = np.random.uniform(
         0, 1, size=o.shape).astype(o.dtype)
     attack(
@@ -65,10 +67,12 @@ def test_attack_parameters2(bn_adversarial):
     assert adv.distance.value < np.inf
 
 
+@pytest.mark.filterwarnings("ignore:Batch size tuning after so few steps")
 def test_attack_parameters3(bn_adversarial):
     adv = bn_adversarial
     attack = BoundaryAttack()
     o = adv.original_image
+    np.random.seed(2)
     starting_point = np.random.uniform(
         0, 1, size=o.shape).astype(o.dtype)
     attack(
@@ -100,6 +104,7 @@ def test_attack_impossible(bn_impossible):
     assert adv.distance.value == np.inf
 
 
+@pytest.mark.filterwarnings("ignore:Internal inconsistency, probably caused")
 def test_attack_convergence(bn_adversarial):
     adv = bn_adversarial
     attack1 = DeepFoolAttack()

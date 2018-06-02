@@ -4,6 +4,7 @@ from collections import Iterable
 import numpy as np
 
 from .base import Attack
+from .base import call_decorator
 
 
 class AdditiveNoiseAttack(Attack):
@@ -11,7 +12,34 @@ class AdditiveNoiseAttack(Attack):
 
     """
 
-    def _apply(self, a, epsilons=1000):
+    @call_decorator
+    def __call__(self, input_or_adv, label=None, unpack=True, epsilons=1000):
+        """Adds uniform or Gaussian noise to the image, gradually increasing
+        the standard deviation until the image is misclassified.
+
+        Parameters
+        ----------
+        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
+            The original, unperturbed input as a `numpy.ndarray` or
+            an :class:`Adversarial` instance.
+        label : int
+            The reference label of the original input. Must be passed
+            if `a` is a `numpy.ndarray`, must not be passed if `a` is
+            an :class:`Adversarial` instance.
+        unpack : bool
+            If true, returns the adversarial input, otherwise returns
+            the Adversarial object.
+        epsilons : int or Iterable[float]
+            Either Iterable of noise levels or number of noise levels
+            between 0 and 1 that should be tried.
+
+        """
+
+        a = input_or_adv
+        del input_or_adv
+        del label
+        del unpack
+
         image = a.original_image
         bounds = a.bounds()
         min_, max_ = bounds

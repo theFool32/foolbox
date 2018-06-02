@@ -1,9 +1,11 @@
+import logging
 import warnings
 from collections import Iterable
 
 import numpy as np
 
 from .base import Attack
+from .base import call_decorator
 
 
 class BlendedUniformNoiseAttack(Attack):
@@ -12,7 +14,38 @@ class BlendedUniformNoiseAttack(Attack):
 
     """
 
-    def _apply(self, a, epsilons=1000, max_directions=1000, verbose=False):
+    @call_decorator
+    def __call__(self, input_or_adv, label=None, unpack=True,
+                 epsilons=1000, max_directions=1000):
+
+        """Blends the image with a uniform noise image until it
+        is misclassified.
+
+        Parameters
+        ----------
+        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
+            The original, unperturbed input as a `numpy.ndarray` or
+            an :class:`Adversarial` instance.
+        label : int
+            The reference label of the original input. Must be passed
+            if `a` is a `numpy.ndarray`, must not be passed if `a` is
+            an :class:`Adversarial` instance.
+        unpack : bool
+            If true, returns the adversarial input, otherwise returns
+            the Adversarial object.
+        epsilons : int or Iterable[float]
+            Either Iterable of blending steps or number of blending steps
+            between 0 and 1 that should be tried.
+        max_directions : int
+            Maximum number of random images to try.
+
+        """
+
+        a = input_or_adv
+        del input_or_adv
+        del label
+        del unpack
+
         image = a.original_image
         min_, max_ = a.bounds()
 
@@ -28,9 +61,8 @@ class BlendedUniformNoiseAttack(Attack):
                 min_, max_, size=image.shape).astype(image.dtype)
             _, is_adversarial = a.predictions(random_image)
             if is_adversarial:
-                if verbose:
-                    print('Found adversarial image after {} attempts'.format(
-                        j + 1))
+                logging.info('Found adversarial image after {} '
+                             'attempts'.format(j + 1))
                 break
         else:
             # never breaked

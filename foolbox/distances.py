@@ -9,6 +9,8 @@ Distances
 
    MeanSquaredDistance
    MeanAbsoluteDistance
+   Linfinity
+   L0
 
 Aliases
 -------
@@ -17,6 +19,8 @@ Aliases
    :nosignatures:
 
    MSE
+   MAE
+   Linf
 
 Base class
 ----------
@@ -121,7 +125,7 @@ class MeanSquaredDistance(Distance):
 
     def _calculate(self):
         min_, max_ = self._bounds
-        n = np.prod(self.reference.shape)
+        n = self.reference.size
         f = n * (max_ - min_)**2
 
         diff = self.other - self.reference
@@ -140,7 +144,7 @@ class MeanSquaredDistance(Distance):
         return self._gradient
 
     def __str__(self):
-        return 'normalized MSE = {:.5f}  %'.format(self._value * 100)
+        return 'normalized MSE = {:.2e}'.format(self._value)
 
 
 MSE = MeanSquaredDistance
@@ -154,10 +158,55 @@ class MeanAbsoluteDistance(Distance):
     def _calculate(self):
         min_, max_ = self._bounds
         diff = (self.other - self.reference) / (max_ - min_)
-        value = np.mean(np.abs(diff))
-        n = np.prod(self.reference.shape)
+        value = np.mean(np.abs(diff)).astype(np.float64)
+        n = self.reference.size
         gradient = 1 / n * np.sign(diff) / (max_ - min_)
         return value, gradient
 
     def __str__(self):
-        return 'normalized MAE = {:.5f}  %'.format(self._value * 100)
+        return 'normalized MAE = {:.2e}'.format(self._value)
+
+
+MAE = MeanAbsoluteDistance
+
+
+class Linfinity(Distance):
+    """Calculates the L-infinity norm of the difference between two images.
+
+    """
+
+    def _calculate(self):
+        min_, max_ = self._bounds
+        diff = (self.other - self.reference) / (max_ - min_)
+        value = np.max(np.abs(diff)).astype(np.float64)
+        gradient = None
+        return value, gradient
+
+    @property
+    def gradient(self):
+        raise NotImplementedError
+
+    def __str__(self):
+        return 'normalized Linf distance = {:.2e}'.format(self._value)
+
+
+Linf = Linfinity
+
+
+class L0(Distance):
+    """Calculates the L0 norm of the difference between two images.
+
+    """
+
+    def _calculate(self):
+        diff = self.other - self.reference
+        value = np.sum(diff != 0)
+        gradient = None
+        return value, gradient
+
+    @property
+    def gradient(self):
+        raise NotImplementedError
+
+    def __str__(self):
+        return 'L0 distance = {}'.format(self._value)
