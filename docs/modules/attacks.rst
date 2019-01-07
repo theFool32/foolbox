@@ -27,6 +27,7 @@
    L2BasicIterativeAttack
    ProjectedGradientDescentAttack
    ProjectedGradientDescent
+   PGD
    RandomStartProjectedGradientDescentAttack
    RandomProjectedGradientDescent
    RandomPGD
@@ -34,12 +35,15 @@
    MomentumIterativeMethod
    LBFGSAttack
    DeepFoolAttack
+   NewtonFoolAttack
    DeepFoolL2Attack
    DeepFoolLinfinityAttack
+   ADefAttack
    SLSQPAttack
    SaliencyMapAttack
    IterativeGradientAttack
    IterativeGradientSignAttack
+   CarliniWagnerL2Attack
 
 
 .. rubric:: :doc:`attacks/score`
@@ -58,13 +62,14 @@
    :nosignatures:
 
    BoundaryAttack
+   SpatialAttack
+   PointwiseAttack
    GaussianBlurAttack
    ContrastReductionAttack
    AdditiveUniformNoiseAttack
    AdditiveGaussianNoiseAttack
    SaltAndPepperNoiseAttack
    BlendedUniformNoiseAttack
-   PointwiseAttack
 
 
 .. rubric:: :doc:`attacks/other`
@@ -72,4 +77,5 @@
 .. autosummary::
    :nosignatures:
 
+   BinarizationRefinementAttack
    PrecomputedImagesAttack

@@ -12,6 +12,7 @@ Models
    Model
    DifferentiableModel
    TensorFlowModel
+   TensorFlowEagerModel
    PyTorchModel
    KerasModel
    TheanoModel
@@ -26,7 +27,9 @@ Wrappers
    :nosignatures:
 
    ModelWrapper
-   GradientLess
+   DifferentiableModelWrapper
+   ModelWithoutGradients
+   ModelWithEstimatedGradients
    CompositeModel
 
 Detailed description
@@ -39,6 +42,9 @@ Detailed description
    :members:
 
 .. autoclass:: TensorFlowModel
+   :members:
+
+.. autoclass:: TensorFlowEagerModel
    :members:
 
 .. autoclass:: PyTorchModel
@@ -62,7 +68,13 @@ Detailed description
 .. autoclass:: ModelWrapper
    :members:
 
-.. autoclass:: GradientLess
+.. autoclass:: DifferentiableModelWrapper
+   :members:
+
+.. autoclass:: ModelWithoutGradients
+   :members:
+
+.. autoclass:: ModelWithEstimatedGradients
    :members:
 
 .. autoclass:: CompositeModel

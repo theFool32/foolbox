@@ -71,11 +71,19 @@ Gradient-based attacks
    :members:
    :special-members:
 
+.. autoclass:: NewtonFoolAttack
+   :members:
+   :special-members:
+
 .. autoclass:: DeepFoolL2Attack
    :members:
    :special-members:
 
 .. autoclass:: DeepFoolLinfinityAttack
+   :members:
+   :special-members:
+
+.. autoclass:: ADefAttack
    :members:
    :special-members:
 
@@ -92,5 +100,9 @@ Gradient-based attacks
    :special-members:
 
 .. autoclass:: IterativeGradientSignAttack
+   :members:
+   :special-members:
+
+.. autoclass:: CarliniWagnerL2Attack
    :members:
    :special-members:
